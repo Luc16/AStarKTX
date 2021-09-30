@@ -1,17 +1,9 @@
 package com.github.Luc16.AStar.components
 
-import algorithm.GridNode
 import algorithm.Heap
-import algorithm.HeapNode
 import algorithm.Position
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.utils.TimeUtils
-import com.github.Luc16.AStar.screens.SIZE_X
-import com.github.Luc16.AStar.screens.SIZE_Y
-import ktx.graphics.use
-import java.util.*
-import kotlin.concurrent.schedule
 import kotlin.math.abs
 
 class GameGrid(
@@ -60,7 +52,7 @@ class GameGrid(
 
             if (current.pos.col == end.col && current.pos.line == end.line){
                 paintOpen()
-                paintPath(start, end)
+                paintPath(end)
                 return true
             }
 
@@ -98,7 +90,7 @@ class GameGrid(
             current.isClosed = true
 
             if (current.pos.col == end.col && current.pos.line == end.line){
-                paintPath(start, end)
+                paintPath(end)
                 return Heap<Node>(sizeX*sizeY)
             }
 
@@ -147,14 +139,12 @@ class GameGrid(
         }
     }
 
-    private fun paintPath(start: Position, end: Position) {
+    private fun paintPath(end: Position) {
         var node: Node? = getNodeInGrid(end)
         while (node != null){
             node.color = Color.WHITE
-            node = node.parent as Node?
+            node = node.parent
         }
-//        getNodeInGrid(start).color = Color.WHITE
-//        getNodeInGrid(end).color = Color.WHITE
     }
 
     fun draw(renderer: ShapeRenderer){

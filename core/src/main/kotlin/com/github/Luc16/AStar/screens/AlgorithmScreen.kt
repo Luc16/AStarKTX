@@ -10,24 +10,25 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.TimeUtils
 import com.github.Luc16.AStar.AStar
 import com.github.Luc16.AStar.HEIGHT
+import com.github.Luc16.AStar.SIZE_X
+import com.github.Luc16.AStar.SIZE_Y
 import com.github.Luc16.AStar.components.GameGrid
 import com.github.Luc16.AStar.components.Node
 import ktx.app.clearScreen
 import ktx.graphics.use
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
-const val SIZE_X = 128
-const val SIZE_Y = 72
-val BACKGROUD_COLOR = Color.LIGHT_GRAY
-
-class AlgorithmScreen(game: AStar): CustomScreen(game) {
-    private var grid = GameGrid(SIZE_X, SIZE_Y, BACKGROUD_COLOR)
+class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
     private var start = Position(0, 0)
     private var end = Position(0, 0)
     private var open: Heap<Node> = Heap<Node>(SIZE_X*SIZE_Y)
     private var startAnimation = false
+    private var prevDraw: Position? = null
 
     override fun render(delta: Float) {
-        if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) game.setScreen<Screen1>()
+        if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) game.setScreen<GameScreen>()
         if (!startAnimation) runAlgo()
         else runAnimation()
         draw()
@@ -42,7 +43,7 @@ class AlgorithmScreen(game: AStar): CustomScreen(game) {
     private fun runAlgo(){
         makeWalls()
         when{
-            Gdx.input.isKeyPressed(Input.Keys.R) -> grid = GameGrid(SIZE_X, SIZE_Y, BACKGROUD_COLOR)
+            Gdx.input.isKeyPressed(Input.Keys.R) -> resetGrid()
             Gdx.input.isKeyPressed(Input.Keys.P) -> grid.resetPath()
             Gdx.input.isKeyJustPressed(Input.Keys.ENTER) ->{
                 grid.resetPath()
@@ -58,8 +59,9 @@ class AlgorithmScreen(game: AStar): CustomScreen(game) {
         }
     }
 
-    private fun makeWalls(){
+    override fun makeWalls(){
         val mouse = Vector2(Gdx.input.x.toFloat(), HEIGHT - Gdx.input.y.toFloat())
+        if (!Gdx.input.isButtonPressed(Input.Buttons.LEFT)) prevDraw = null
         grid.grid.forEach { line ->
             line.forEach { node ->
                 node.run {
@@ -67,6 +69,8 @@ class AlgorithmScreen(game: AStar): CustomScreen(game) {
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.LEFT) -> {
                             isTraversable = false
                             color = Color.BROWN
+                            prevDraw?.let { prevPos -> completeWall(prevPos, pos)}
+                            prevDraw = pos
                         }
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.RIGHT) -> {
                             isTraversable = true
@@ -93,13 +97,6 @@ class AlgorithmScreen(game: AStar): CustomScreen(game) {
                     }
                 }
             }
-        }
-    }
-
-    private fun draw(){
-        clearScreen(0f, 0f, 0f, 0f)
-        renderer.use(ShapeRenderer.ShapeType.Filled) {
-            grid.draw(renderer)
         }
     }
 }
