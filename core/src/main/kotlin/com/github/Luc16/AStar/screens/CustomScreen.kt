@@ -7,6 +7,6 @@ import ktx.app.KtxScreen
 
 abstract class CustomScreen(
     val game: AStar,
-    val batch: Batch = game.batch,
-    val drawer: ShapeRenderer = game.drawer
-    ) : KtxScreen
+//    val batch: Batch = game.batch,
+    val renderer: ShapeRenderer = game.renderer
+) : KtxScreen

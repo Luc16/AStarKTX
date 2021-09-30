@@ -4,9 +4,8 @@ import kotlin.math.abs
 
 data class Position(val line: Int, val col: Int)
 
-class Node(val pos: Position): HeapElement<Node> {
-    override var heapIdx: Int = 0
-    var parent: Node? = null
+open class GridNode(val pos: Position): HeapNode<GridNode>() {
+    var parent: GridNode? = null
     var hCost = 0
     var gCost = 0
     val fCost: Int
@@ -17,20 +16,20 @@ class Node(val pos: Position): HeapElement<Node> {
     var isClosed = false
     var type: String = "N"
 
-    override fun toString(): String = type// fCost.toString()
+    override fun toString(): String = fCost.toString()
 
 
-    override fun compareTo(other: Node): Int = if (other.fCost - fCost == 0) other.hCost - hCost else other.fCost - fCost
+    override fun compareTo(other: GridNode): Int = if (other.fCost - fCost == 0) other.hCost - hCost else other.fCost - fCost
 
 }
 
-class Grid(
+open class TextGrid(
     private val sizeX: Int,
     private val sizeY: Int,
 ) {
-    private val grid: List<List<Node>> = List(sizeY){ i ->
+     private val grid: List<List<GridNode>> = List(sizeY){ i ->
         List(sizeX) {j ->
-            Node(Position(i, j))
+            GridNode(Position(i, j))
         }
     }
 
@@ -39,57 +38,44 @@ class Grid(
         val range2 = if (start.col < end.col) start.col..end.col else end.col..start.col
         for (i in range1){
             for (j in range2){
-                val node: Node = getNodeInGrid(Position(i, j))
+                val node: GridNode = getNodeInGrid(Position(i, j))
                 node.isTraversable = false
                 node.type = "B"
             }
         }
     }
 
-    private fun getNodeInGrid(point: Position): Node{
+    private fun getNodeInGrid(point: Position): GridNode{
         return grid[point.line][point.col]
     }
 
-    private fun getBestNode(nodes: List<Node>): Node{
-        var bestNode = nodes[0]
-        for (i in 1 until nodes.size){
-            if ((nodes[i].fCost < bestNode.fCost) ||
-                ((nodes[i].fCost == bestNode.fCost) &&
-                        (nodes[i].hCost < bestNode.hCost))) bestNode = nodes[i]
-        }
-        return bestNode
-    }
-
-    private fun calculateHCost(node: Node, end: Position): Int {
+    private fun calculateHCost(node: GridNode, end: Position): Int {
         val distX: Int = abs(end.line - node.pos.line)
         val distY: Int = abs(end.col - node.pos.col)
         return if (distX > distY) distX*10 + distY*4 else distX*4 + distY*10
     }
 
-    private fun forEachNeighbor(node: Node, func: (Node, Int, Int) -> Unit){
+    private fun GridNode.forEachNeighbor(func: (GridNode, Int, Int) -> Unit){
         for (i in -1..1){
             for (j in -1..1){
                 if (i == 0 && j == 0) continue
 
-                if( i + node.pos.line in 0 until sizeY &&
-                    j + node.pos.col in 0 until  sizeX) {
-                    func(grid[i + node.pos.line][j + node.pos.col], i, j)
+                if( i + this.pos.line in 0 until sizeY &&
+                    j + this.pos.col in 0 until  sizeX) {
+                    func(grid[i + this.pos.line][j + this.pos.col], i, j)
                 }
             }
         }
     }
 
     fun shortestPath(start: Position, end: Position){
-        val endNode: Node = getNodeInGrid(end)
+        val endNode: GridNode = getNodeInGrid(end)
 
-//        val open = mutableListOf(getNodeInGrid(start))
-        val open = Heap<Node>(sizeX*sizeY)
+        val open = Heap<GridNode>(sizeX*sizeY)
         open.add(getNodeInGrid(start))
 
         while (true) {
             val current = open.pop()
-//            val current: Node = getBestNode(open)
-//            open.remove(current)
             current.isClosed = true
 
             if (current == endNode  ){
@@ -97,7 +83,7 @@ class Grid(
                 return
             }
 
-            forEachNeighbor(current) { node, i, j ->
+            current.forEachNeighbor { node, i, j ->
                 if (!node.isTraversable || node.isClosed) return@forEachNeighbor
 
                 val prevGCost = node.gCost
@@ -120,7 +106,7 @@ class Grid(
     }
 
     private fun printPath(start: Position, end: Position) {
-        var node: Node? = getNodeInGrid(end)
+        var node: GridNode? = getNodeInGrid(end)
         while (node != null){
             node.type = "."
             node = node.parent
@@ -138,7 +124,7 @@ class Grid(
 }
 
 fun main(){
-    val g = Grid(10, 10)
+    val g = TextGrid(10, 10)
     g.createWall(Position(2, 0), Position(2, 5))
     g.createWall(Position(7, 1), Position(7, 9))
     g.printGrid()

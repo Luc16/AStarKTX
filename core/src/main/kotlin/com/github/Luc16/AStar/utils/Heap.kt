@@ -1,19 +1,24 @@
 package algorithm
 
+import com.github.Luc16.AStar.components.Node
+import javax.lang.model.element.Element
+
 private const val MAX_SIZE_ERROR = "At max size"
 private const val EMPTY_HEAP_ERROR = "Heap is empty"
 
-class Heap<T: HeapElement<T>>(
+class Heap<T: HeapNode<T>>(
     private val maxHeapSize: Int
 ) {
     private val heapArray = Array<Any?>(maxHeapSize) { null }
-    private var currentSize = 0
+    var currentSize = 0
 
     private fun getParentIndex(element: T): Int = (element.heapIdx - 1)/2
 
     private fun getChildrenIndex(element: T, childNum: Int): Int = 2*element.heapIdx+childNum
 
     fun peek(): T = if (currentSize > 0) (heapArray[0] as T) else error(EMPTY_HEAP_ERROR)
+
+    fun isEmpty(): Boolean = currentSize <= 0
 
     private fun T.swap(element: T) {
         heapArray[heapIdx] = heapArray[element.heapIdx].also { heapArray[element.heapIdx] = heapArray[heapIdx] }
@@ -65,10 +70,21 @@ class Heap<T: HeapElement<T>>(
     }
 
     override fun toString(): String {
-        return heapArray.contentToString()
+        var str = ""
+        heapArray.forEach {
+            if (it != null) str += " $it"
+        }
+        return str
+    }
+
+    fun forEach(func: (T) -> Unit){
+        heapArray.forEach { element ->
+            if (element == null) return
+            func(element as T)
+        }
     }
 }
 
-interface HeapElement<T>: Comparable<T>{
-    var heapIdx: Int
+abstract class HeapNode<T>: Comparable<T>{
+    var heapIdx: Int = 0
 }
