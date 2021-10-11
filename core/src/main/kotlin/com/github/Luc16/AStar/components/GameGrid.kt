@@ -4,6 +4,7 @@ import algorithm.Heap
 import algorithm.Position
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.math.Vector2
 import kotlin.math.abs
 
 class GameGrid(
@@ -13,7 +14,7 @@ class GameGrid(
 ) {
     val grid: List<List<Node>> = List(sizeY){ i ->
         List(sizeX) {j ->
-            Node(Position(i, j), sizeX, sizeY, color)
+            Node(Position(i, j), color)
         }
     }
 
@@ -40,8 +41,7 @@ class GameGrid(
         }
     }
 
-    fun shortestPath(start: Position, end: Position): Boolean{
-
+    fun shortestPath(start: Position, end: Position, paint: Boolean): List<Vector2> {
         val open = Heap<Node>(sizeX*sizeY)
         open.add(getNodeInGrid(start))
 
@@ -51,16 +51,20 @@ class GameGrid(
             current.isClosed = true
 
             if (current.pos.col == end.col && current.pos.line == end.line){
-                paintOpen()
-                paintPath(end)
-                return true
+                if (paint) paintOpen()
+                return paintPath(end, paint)
+            }
+
+            val jBlock = mutableListOf<Int>()
+            val iBlock = mutableListOf<Int>()
+            current.forEachNeighbor { node, i, j ->
+                if (i == 0 && !node.isTraversable) jBlock.add(j)
+                else if (j == 0 && !node.isTraversable) iBlock.add(i)
             }
 
             current.forEachNeighbor { node, i, j ->
                 if (!node.isTraversable || node.isClosed) return@forEachNeighbor
-                if ( (i != 0 && j != 0 &&
-                            !grid[current.pos.line][j + current.pos.col].isTraversable &&
-                            !grid[i + current.pos.line][current.pos.col].isTraversable)) return@forEachNeighbor
+                if (i in iBlock || j in jBlock) return@forEachNeighbor
 
                 val prevGCost = node.gCost
                 val newGCost: Int = current.gCost + if (j == 0 || i == 0) 10 else 14
@@ -80,8 +84,8 @@ class GameGrid(
             }
 
         }
-        paintOpen()
-        return false
+        if (paint) paintOpen()
+        return listOf(Vector2(0f, 0f))
     }
 
     fun animatedAstar(start: Position, end: Position, open: Heap<Node>): Heap<Node> {
@@ -90,8 +94,8 @@ class GameGrid(
             current.isClosed = true
 
             if (current.pos.col == end.col && current.pos.line == end.line){
-                paintPath(end)
-                return Heap<Node>(sizeX*sizeY)
+                paintPath(end, true)
+                return Heap(sizeX*sizeY)
             }
 
             current.forEachNeighbor { node, i, j ->
@@ -125,7 +129,7 @@ class GameGrid(
         }
         else {
             paintOpen()
-            return Heap<Node>(sizeX*sizeY)
+            return Heap(sizeX*sizeY)
         }
         return open
     }
@@ -139,18 +143,26 @@ class GameGrid(
         }
     }
 
-    private fun paintPath(end: Position) {
+    private fun paintPath(end: Position, paint: Boolean): List<Vector2> {
         var node: Node? = getNodeInGrid(end)
+        val directions = mutableListOf<Vector2>()
         while (node != null){
-            node.color = Color.WHITE
+            node.parent?.let { parent ->
+                node?.let { node ->
+                    directions.add(Vector2((node.pos.col - parent.pos.col).toFloat(), (parent.pos.line - node.pos.line).toFloat()))
+                }
+            }
+            if (paint) node.color = Color.WHITE
             node = node.parent
         }
+        return directions.reversed()
     }
 
-    fun draw(renderer: ShapeRenderer){
+    fun draw(renderer: ShapeRenderer, resetNodes: Boolean){
         grid.forEach { line ->
             line.forEach { node ->
                 node.draw(renderer)
+                if (resetNodes) node.reset()
             }
         }
     }

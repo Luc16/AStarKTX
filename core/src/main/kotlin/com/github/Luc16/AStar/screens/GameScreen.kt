@@ -1,40 +1,36 @@
 package com.github.Luc16.AStar.screens
 
-import algorithm.Heap
 import algorithm.Position
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.utils.TimeUtils
 import com.github.Luc16.AStar.AStar
 import com.github.Luc16.AStar.HEIGHT
 import com.github.Luc16.AStar.SIZE_X
 import com.github.Luc16.AStar.SIZE_Y
-import com.github.Luc16.AStar.components.GameGrid
-import com.github.Luc16.AStar.components.Node
-import ktx.app.clearScreen
-import ktx.graphics.circle
-import ktx.graphics.use
-import kotlin.concurrent.thread
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
+import com.github.Luc16.AStar.components.Enemy
+import com.github.Luc16.AStar.utils.WallLine
+
+const val MAX_NUM_WALLS = 100
 
 class GameScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
     private var prevDraw: Position? = null
+    private val wallLine: WallLine = WallLine(MAX_NUM_WALLS)
+    private val e = Enemy(1, 4f, 10f, 10f)
 
     override fun render(delta: Float) {
+        e.move(grid)
         when {
             Gdx.input.isKeyPressed(Input.Keys.R) -> {
                 resetGrid()
+                wallLine.removeAll()
                 prevDraw = null
             }
             Gdx.input.isKeyPressed(Input.Keys.NUM_2) -> game.setScreen<AlgorithmScreen>()
         }
         makeWalls()
-        draw()
+        draw(e, resetNodes = true)
     }
 
     override fun makeWalls(){
@@ -45,15 +41,20 @@ class GameScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
                 node.run {
                     when {
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.LEFT) -> {
-                            isTraversable = false
-                            color = Color.BROWN
-                            prevDraw?.let { prevPos -> completeWall(prevPos, pos)}
-                            prevDraw = pos
+                            if (isTraversable){
+                                this.becomeWall()
+                                prevDraw?.let { prevPos -> fillWalls(prevPos, pos){ wallLine.add(it) } }
+                                wallLine.add(this)
+                                prevDraw = pos
+                            }
                         }
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.RIGHT) -> {
                             isTraversable = true
                             color = Color.NAVY
+                            wallLine.updateLine()
                         }
+                        rect.contains(mouse) && Gdx.input.isKeyJustPressed(Input.Keys.M) -> e.calculatePath(grid, pos)
+
                     }
                 }
             }

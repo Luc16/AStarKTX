@@ -6,11 +6,10 @@ import algorithm.Position
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Rectangle
-import com.github.Luc16.AStar.HEIGHT
-import com.github.Luc16.AStar.WIDTH
+import com.github.Luc16.AStar.*
 
 
-class Node(val pos: Position, sizeX: Int, sizeY: Int, var color: Color): HeapNode<Node>() {
+class Node(val pos: Position, var color: Color): HeapNode<Node>() {
     var parent: Node? = null
     var hCost = 0
     var gCost = 0
@@ -21,9 +20,10 @@ class Node(val pos: Position, sizeX: Int, sizeY: Int, var color: Color): HeapNod
     var isTraversable = true
     var isClosed = false
 
-    val rect = Rectangle(pos.col*WIDTH/sizeX.toFloat(), HEIGHT - (pos.line + 1)*HEIGHT/sizeY.toFloat(),
-        WIDTH/sizeX.toFloat(), HEIGHT/sizeY.toFloat())
+    val rect = Rectangle(pos.col* SQ_SIZE_X, HEIGHT - (pos.line + 1)*SQ_SIZE_Y,
+        SQ_SIZE_X, SQ_SIZE_Y)
     val defaultColor = color
+    private val wallColor: Color = Color.BROWN
 
     override fun toString(): String = fCost.toString()
 
@@ -40,5 +40,15 @@ class Node(val pos: Position, sizeX: Int, sizeY: Int, var color: Color): HeapNod
         hCost = 0
         gCost = 0
         isClosed = false
+    }
+
+    fun becomeTraversable(){
+        isTraversable = true
+        color = defaultColor
+    }
+
+    fun becomeWall(){
+        isTraversable = false
+        color = wallColor
     }
 }

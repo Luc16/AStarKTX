@@ -6,14 +6,16 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.github.Luc16.AStar.AStar
 import com.github.Luc16.AStar.SIZE_X
 import com.github.Luc16.AStar.SIZE_Y
+import com.github.Luc16.AStar.components.Entity
 import com.github.Luc16.AStar.components.GameGrid
+import com.github.Luc16.AStar.components.Node
 import ktx.app.clearScreen
 import ktx.graphics.use
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-open class AstarScreen(game: AStar, val bcColor: Color): CustomScreen(game) {
+open class AstarScreen(game: AStar, private val bcColor: Color): CustomScreen(game) {
     open var grid = GameGrid(SIZE_X, SIZE_Y, bcColor)
 
     fun resetGrid(){
@@ -22,53 +24,39 @@ open class AstarScreen(game: AStar, val bcColor: Color): CustomScreen(game) {
 
     open fun makeWalls() = Unit
 
-    fun completeWall(prevPos: Position, pos: Position){
+    fun fillWalls(prevPos: Position, pos: Position, func: (node:Node) -> Unit = {}){
         val distCol = prevPos.col - pos.col
         val distLine = prevPos.line - pos.line
-        if (distCol == 0) {
-            paintLine(prevPos.line, pos.line, pos.col, true)
-            return
-        }
-        if (distLine == 0) {
-            paintLine(prevPos.col, pos.col, pos.line, false)
-            return
-        }
 
-        val direction = listOf(-distLine/ abs(distLine), -distCol/ abs(distCol))
-        val diagonalSize = min(abs(distCol), abs(distLine))
-        paintDiagonal(direction, diagonalSize, prevPos.line, prevPos.col)
+        val dir = listOf(if (distLine < 0) - 1 else 1, if (distCol < 0) - 1 else 1)
         if (abs(distLine) > abs(distCol)){
-            paintLine(prevPos.line + diagonalSize*direction[0], pos.line, pos.col, true)
+            paintLine(prevPos, distLine, distCol, dir, 0, func)
+        } else {
+            paintLine(prevPos, distCol, distLine, dir, 1, func)
         }
-        else
-            paintLine(prevPos.col + diagonalSize*direction[1], pos.col, pos.line, false)
     }
 
-    private fun paintLine(begin: Int, end: Int, other:Int, isLine: Boolean){
-        val b = min(begin, end)
-        val e = max(begin, end)
-        for (i in (b + 1)..e){
-            val pos = if (isLine) Position(i, other) else Position(other, i)
-            grid.getNodeInGrid(pos).run {
-                isTraversable = false
-                color = Color.BROWN
-            }
-        }
-    }
-    private fun paintDiagonal(direction: List<Int>, diagonalSize: Int, line: Int, col: Int){
-        for (i in 1 .. diagonalSize){
-            val p = Position(line + i*direction[0], col + i*direction[1])
-            grid.getNodeInGrid(p).run {
-                isTraversable = false
-                color = Color.BROWN
+    private fun paintLine(prevPos: Position, maxDist: Int, minDist: Int, dir:List<Int>, dirIdx: Int, func: (node:Node) -> Unit = {}){
+        for (i in 1..abs(maxDist)){
+            val m: Float = if (minDist == 0) 0f else (minDist.toFloat()/maxDist)
+            val newPos = Position(prevPos.line - (m * i).toInt()*dirIdx*dir[dirIdx] - i*dir[dirIdx]*(1-dirIdx),
+                prevPos.col - i*dir[dirIdx]*dirIdx - (m * i).toInt()*(1 - dirIdx)*dir[dirIdx])
+            grid.getNodeInGrid(newPos).run {
+                if (this.isTraversable){
+                    func(this)
+                }
+                becomeWall()
             }
         }
     }
 
-     fun draw(){
+    open fun draw(vararg drawElements: Entity, resetNodes: Boolean = false){
         clearScreen(0f, 0f, 0f, 0f)
         renderer.use(ShapeRenderer.ShapeType.Filled) {
-            grid.draw(renderer)
+            grid.draw(renderer, resetNodes)
+            drawElements.forEach { drawable ->
+                drawable.draw(renderer)
+            }
         }
     }
 

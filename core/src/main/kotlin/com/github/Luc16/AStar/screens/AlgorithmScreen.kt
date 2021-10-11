@@ -5,20 +5,13 @@ import algorithm.Position
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.TimeUtils
 import com.github.Luc16.AStar.AStar
 import com.github.Luc16.AStar.HEIGHT
 import com.github.Luc16.AStar.SIZE_X
 import com.github.Luc16.AStar.SIZE_Y
-import com.github.Luc16.AStar.components.GameGrid
 import com.github.Luc16.AStar.components.Node
-import ktx.app.clearScreen
-import ktx.graphics.use
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
     private var start = Position(0, 0)
@@ -32,7 +25,6 @@ class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
         if (!startAnimation) runAlgo()
         else runAnimation()
         draw()
-
     }
     
     private fun runAnimation(){
@@ -48,7 +40,7 @@ class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
             Gdx.input.isKeyJustPressed(Input.Keys.ENTER) ->{
                 grid.resetPath()
                 val startTime = TimeUtils.millis()
-                grid.shortestPath(start, end)
+                grid.shortestPath(start, end, true)
                 println("O tempo que o algoritimo demorou foi: ${TimeUtils.timeSinceMillis(startTime)} milisegundos")
             }
             Gdx.input.isKeyJustPressed(Input.Keys.SPACE) -> {
@@ -69,7 +61,7 @@ class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.LEFT) -> {
                             isTraversable = false
                             color = Color.BROWN
-                            prevDraw?.let { prevPos -> completeWall(prevPos, pos)}
+                            prevDraw?.let { prevPos -> fillWalls(prevPos, pos)}
                             prevDraw = pos
                         }
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.RIGHT) -> {

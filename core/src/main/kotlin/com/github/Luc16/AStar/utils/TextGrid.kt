@@ -2,7 +2,9 @@ package algorithm
 
 import kotlin.math.abs
 
-data class Position(val line: Int, val col: Int)
+data class Position(val line: Int, val col: Int) {
+    override fun toString(): String = "($line, $col)"
+}
 
 open class GridNode(val pos: Position): HeapNode<GridNode>() {
     var parent: GridNode? = null
