@@ -61,7 +61,7 @@ class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.LEFT) -> {
                             isTraversable = false
                             color = Color.BROWN
-                            prevDraw?.let { prevPos -> fillWalls(prevPos, pos)}
+                            prevDraw?.let { prevPos -> fillWalls(prevPos, pos){ it.becomeWall() } }
                             prevDraw = pos
                         }
                         rect.contains(mouse) && Gdx.input.isButtonPressed(Input.Buttons.RIGHT) -> {

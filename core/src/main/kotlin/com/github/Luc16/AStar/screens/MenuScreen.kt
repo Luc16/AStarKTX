@@ -40,6 +40,7 @@ class MenuScreen(game: AStar,
             font.draw(batch, "EU TE AMOOOOOO", 450f, 380f)
         }
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) game.setScreen<AlgorithmScreen>()
+        if (Gdx.input.isKeyPressed(Input.Keys.ENTER)) game.setScreen<GameScreen>()
 
         super.render(delta)
     }

@@ -27,20 +27,7 @@ class GameGrid(
         val distY: Int = abs(end.col - node.pos.col)
         return if (distX > distY) distX*10 + distY*4 else distX*4 + distY*10
     }
-
-    private fun Node.forEachNeighbor(func: (Node, Int, Int) -> Unit){
-        for (i in -1..1){
-            for (j in -1..1){
-                if ((i == 0 && j == 0)) continue
-
-                if( i + this.pos.line in 0 until sizeY &&
-                    j + this.pos.col in 0 until  sizeX) {
-                    func(grid[i + this.pos.line][j + this.pos.col], i, j)
-                }
-            }
-        }
-    }
-
+    
     fun shortestPath(start: Position, end: Position, paint: Boolean): List<Vector2> {
         val open = Heap<Node>(sizeX*sizeY)
         open.add(getNodeInGrid(start))
@@ -57,12 +44,12 @@ class GameGrid(
 
             val jBlock = mutableListOf<Int>()
             val iBlock = mutableListOf<Int>()
-            current.forEachNeighbor { node, i, j ->
+            current.forEachNeighbor(this) { node, i, j ->
                 if (i == 0 && !node.isTraversable) jBlock.add(j)
                 else if (j == 0 && !node.isTraversable) iBlock.add(i)
             }
 
-            current.forEachNeighbor { node, i, j ->
+            current.forEachNeighbor(this) { node, i, j ->
                 if (!node.isTraversable || node.isClosed) return@forEachNeighbor
                 if (i in iBlock || j in jBlock) return@forEachNeighbor
 
@@ -98,7 +85,7 @@ class GameGrid(
                 return Heap(sizeX*sizeY)
             }
 
-            current.forEachNeighbor { node, i, j ->
+            current.forEachNeighbor(this) { node, i, j ->
                 if (!node.isTraversable || node.isClosed) return@forEachNeighbor
                 if ( (i != 0 && j != 0 &&
                             !grid[current.pos.line][j + current.pos.col].isTraversable &&
@@ -158,11 +145,10 @@ class GameGrid(
         return directions.reversed()
     }
 
-    fun draw(renderer: ShapeRenderer, resetNodes: Boolean){
+    fun draw(renderer: ShapeRenderer){
         grid.forEach { line ->
             line.forEach { node ->
                 node.draw(renderer)
-                if (resetNodes) node.reset()
             }
         }
     }

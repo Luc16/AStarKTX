@@ -12,4 +12,5 @@ dependencies {
 	api "io.github.libktx:ktx-style:$ktxVersion"
 	api "io.github.libktx:ktx-scene2d:$ktxVersion"
 	api "io.github.libktx:ktx-actors:$ktxVersion"
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
 }

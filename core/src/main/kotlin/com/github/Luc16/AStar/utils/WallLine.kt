@@ -66,4 +66,12 @@ class WallLine(private val maxSize: Int) {
             lineNode = nextLineNode
         }
     }
+
+    fun forEach(func: (node: Node) -> Unit){
+        var lineNode = if (head != null) head else return
+        while (lineNode != null) {
+            func(lineNode.node)
+            lineNode = lineNode.next
+        }
+    }
 }

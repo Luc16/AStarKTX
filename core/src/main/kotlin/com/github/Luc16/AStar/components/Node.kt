@@ -29,6 +29,19 @@ class Node(val pos: Position, var color: Color): HeapNode<Node>() {
 
     override fun compareTo(other: Node): Int = if (other.fCost - fCost == 0) other.hCost - hCost else other.fCost - fCost
 
+    fun forEachNeighbor(grid: GameGrid, func: (Node, Int, Int) -> Unit){
+        for (i in -1..1){
+            for (j in -1..1){
+                if ((i == 0 && j == 0)) continue
+
+                if( i + pos.line in 0 until SIZE_Y &&
+                    j + pos.col in 0 until  SIZE_X) {
+                    func(grid.grid[i + this.pos.line][j + this.pos.col], i, j)
+                }
+            }
+        }
+    }
+
     fun draw(renderer: ShapeRenderer){
         renderer.color = color
         renderer.rect(rect.x, rect.y, rect.width, rect.height)

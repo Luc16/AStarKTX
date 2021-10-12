@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.github.Luc16.AStar.AStar
 import com.github.Luc16.AStar.SIZE_X
 import com.github.Luc16.AStar.SIZE_Y
+import com.github.Luc16.AStar.components.Enemy
 import com.github.Luc16.AStar.components.Entity
 import com.github.Luc16.AStar.components.GameGrid
 import com.github.Luc16.AStar.components.Node
@@ -16,10 +17,10 @@ import kotlin.math.max
 import kotlin.math.min
 
 open class AstarScreen(game: AStar, private val bcColor: Color): CustomScreen(game) {
-    open var grid = GameGrid(SIZE_X, SIZE_Y, bcColor)
+    open var grid = GameGrid(SIZE_X + 1, SIZE_Y + 1, bcColor)
 
     fun resetGrid(){
-        grid = GameGrid(SIZE_X, SIZE_Y, bcColor)
+        grid = GameGrid(SIZE_X + 1, SIZE_Y + 1, bcColor)
     }
 
     open fun makeWalls() = Unit
@@ -45,17 +46,19 @@ open class AstarScreen(game: AStar, private val bcColor: Color): CustomScreen(ga
                 if (this.isTraversable){
                     func(this)
                 }
-                becomeWall()
             }
         }
     }
 
-    open fun draw(vararg drawElements: Entity, resetNodes: Boolean = false){
+    open fun draw(vararg drawElements: Entity, enemies: List<Enemy> = listOf()){
         clearScreen(0f, 0f, 0f, 0f)
         renderer.use(ShapeRenderer.ShapeType.Filled) {
-            grid.draw(renderer, resetNodes)
+            grid.draw(renderer)
             drawElements.forEach { drawable ->
                 drawable.draw(renderer)
+            }
+            enemies.forEach { enemy ->
+                enemy.draw(renderer)
             }
         }
     }

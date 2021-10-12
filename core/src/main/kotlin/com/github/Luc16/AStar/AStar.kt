@@ -15,11 +15,11 @@ import ktx.app.KtxGame
 import ktx.log.Logger
 import ktx.log.logger
 
-const val WIDTH = 1280
-const val HEIGHT = 720
+const val WIDTH = 1280*5/4
+const val HEIGHT = 720*5/4
 
-const val SIZE_X = 128/2
-const val SIZE_Y = 72/2
+const val SIZE_X = WIDTH/12
+const val SIZE_Y = HEIGHT/12
 
 const val SQ_SIZE_X = WIDTH/SIZE_X.toFloat()
 const val SQ_SIZE_Y = HEIGHT/SIZE_Y.toFloat()
