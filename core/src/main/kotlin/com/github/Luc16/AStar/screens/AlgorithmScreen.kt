@@ -16,7 +16,7 @@ import com.github.Luc16.AStar.components.Node
 class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
     private var start = Position(0, 0)
     private var end = Position(0, 0)
-    private var open: Heap<Node> = Heap<Node>(SIZE_X*SIZE_Y)
+    private var open: Heap<Node> = Heap(SIZE_X*SIZE_Y)
     private var startAnimation = false
     private var prevDraw: Position? = null
 
@@ -24,7 +24,7 @@ class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) game.setScreen<GameScreen>()
         if (!startAnimation) runAlgo()
         else runAnimation()
-        draw()
+        draw {}
     }
     
     private fun runAnimation(){

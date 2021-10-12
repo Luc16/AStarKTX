@@ -3,6 +3,7 @@ package com.github.Luc16.AStar
 import com.badlogic.gdx.Application.LOG_DEBUG
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
@@ -32,6 +33,7 @@ class AStar: KtxGame<CustomScreen>() {
     val batch: Batch by lazy { SpriteBatch() }
 
     override fun create() {
+        font.data.scale(2f)
         Gdx.app.logLevel = LOG_DEBUG
         LOG.debug { "Create game instance" }
         addScreen(Screen1(this))

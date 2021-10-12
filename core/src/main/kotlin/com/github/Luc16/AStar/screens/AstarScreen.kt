@@ -2,6 +2,7 @@ package com.github.Luc16.AStar.screens
 
 import algorithm.Position
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.github.Luc16.AStar.AStar
 import com.github.Luc16.AStar.SIZE_X
@@ -50,16 +51,11 @@ open class AstarScreen(game: AStar, private val bcColor: Color): CustomScreen(ga
         }
     }
 
-    open fun draw(vararg drawElements: Entity, enemies: List<Enemy> = listOf()){
+    open fun draw(render: (ShapeRenderer) -> Unit){
         clearScreen(0f, 0f, 0f, 0f)
         renderer.use(ShapeRenderer.ShapeType.Filled) {
             grid.draw(renderer)
-            drawElements.forEach { drawable ->
-                drawable.draw(renderer)
-            }
-            enemies.forEach { enemy ->
-                enemy.draw(renderer)
-            }
+            render(renderer)
         }
     }
 

@@ -8,12 +8,17 @@ import com.github.Luc16.AStar.SQ_SIZE_Y
 import kotlin.math.sqrt
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
-const val MIN_MOVES = 40
+const val MIN_MOVES = 30
 
-class Enemy(private val speed: Float,
-            x: Float,
-            y: Float):
+class Enemy(
+    private val speed: Float,
+    x: Float,
+    y: Float
+) :
     Entity(x, y, Color.GOLD) {
 
     private var counter = 0
@@ -21,7 +26,7 @@ class Enemy(private val speed: Float,
     private val startPos = Vector2()
     private var moveCounter = 0
 
-    private fun calculatePath(grid: GameGrid, target: Position){
+    private fun calculatePath(grid: GameGrid, target: Position) {
         val node = worldToGrid(grid)
         rect.x = node.rect.x
         rect.y = node.rect.y
@@ -31,37 +36,31 @@ class Enemy(private val speed: Float,
         grid.resetPath()
     }
 
-    private fun generateNewPath(grid: GameGrid, target: Position){
+    private fun generateNewPath(grid: GameGrid, target: Position) {
         moveCounter = 0
-        runBlocking {
-            launch {
-                calculatePath(grid, target)
-            }
-        }
+        calculatePath(grid, target)
     }
 
-    private fun List<Vector2>.noMovementAvailable(): Boolean {
-        return this.isEmpty() || (this[0].x == 0f && this[0].y == 0f)
-    }
+    fun noMovementAvailable(): Boolean = directions.isNotEmpty() && (directions[0].x == 0f && directions[0].y == 0f)
 
-    fun move(grid: GameGrid, target: Position) {
-        if (counter >= directions.size || directions.noMovementAvailable()) {
+    fun move(grid: GameGrid, target: Position, enemies: List<Enemy>) {
+        if (counter >= directions.size || noMovementAvailable() || directions.isEmpty()) {
             generateNewPath(grid, target)
             return
         }
         rect.run {
             var increment = speed
-            if (directions[counter].x != 0f && directions[counter].y != 0f){
-                increment = speed/ sqrt(2f)
+            if (directions[counter].x != 0f && directions[counter].y != 0f) {
+                increment = speed / sqrt(2f)
             }
             x += directions[counter].x * increment
             y += directions[counter].y * increment
 
-            if (!worldToGrid(grid).isTraversable){
-                x -= 2*directions[counter].x * increment
-                y -= 2*directions[counter].y * increment
+            if (!worldToGrid(grid).isTraversable || collidingWithOther(enemies)) {
+                x -= 2 * directions[counter].x * increment
+                y -= 2 * directions[counter].y * increment
                 worldToGrid(grid).run {
-                    if (!isTraversable){
+                    if (!isTraversable) {
                         becomeTraversable()
                     }
                     rect.x = rect.x
@@ -73,15 +72,26 @@ class Enemy(private val speed: Float,
             }
 
             if (x >= (startPos.x + SQ_SIZE_X) || x <= (startPos.x - SQ_SIZE_X) ||
-                y >= (startPos.y + SQ_SIZE_Y) ||  y <= (startPos.y - SQ_SIZE_Y)){
-                x = startPos.x + SQ_SIZE_X*directions[counter].x
-                y = startPos.y + SQ_SIZE_Y*directions[counter].y
+                y >= (startPos.y + SQ_SIZE_Y) || y <= (startPos.y - SQ_SIZE_Y)
+            ) {
+                x = startPos.x + SQ_SIZE_X * directions[counter].x
+                y = startPos.y + SQ_SIZE_Y * directions[counter].y
                 startPos.set(rect.x, rect.y)
                 counter++
                 if (moveCounter > MIN_MOVES) generateNewPath(grid, target)
             }
         }
         moveCounter++
+    }
+
+    private fun collidingWithOther(enemies: List<Enemy>): Boolean {
+        enemies.forEach { enemy ->
+            if (enemy == this) return@forEach
+            if (enemy.rect.overlaps(rect)){
+                return true
+            }
+        }
+        return false
     }
 
     override fun reset() {

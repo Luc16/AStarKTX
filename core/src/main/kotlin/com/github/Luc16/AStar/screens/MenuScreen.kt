@@ -17,17 +17,11 @@ import ktx.graphics.use
 
 const val TIME = 10
 
-class MenuScreen(game: AStar,
-                 private val font: BitmapFont = game.font,
-                 private val batch: Batch = game.batch,
-):CustomScreen(game) {
+class MenuScreen(game: AStar):CustomScreen(game) {
 
     private val colors = listOf<Color>(Color.WHITE, Color.YELLOW, Color.BLUE, Color.ORANGE, Color.CORAL, Color.RED, Color.CHARTREUSE, Color.GOLDENROD)
     private var i = 0
 
-    override fun show() {
-        font.data.scale(2f)
-    }
     override fun render(delta: Float) {
         if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
             if (i% TIME == 0){

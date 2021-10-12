@@ -16,8 +16,10 @@ class Player(var life: Int,
     Entity(x, y, Color.BLACK) {
     var invulnerabilityCounter = 0
 
-    fun move(walls: WallLine, direction: Vector2) {
-        if (life <= 0) return
+    fun move(walls: WallLine, direction: Vector2): Vector2 {
+        if (life <= 0) return Vector2(0f, 0f)
+        val moveAmount = Vector2(rect.x, rect.y)
+
         if (invulnerabilityCounter > 0) invulnerabilityCounter++
         if (invulnerabilityCounter > INVULNERABILITY_TIME) invulnerabilityCounter = 0
 
@@ -66,12 +68,14 @@ class Player(var life: Int,
                 }
             }
         }
+        moveAmount.x = rect.x - moveAmount.x
+        moveAmount.y = rect.y - moveAmount.y
+        return moveAmount
     }
 
     fun getHit(){
         if (invulnerabilityCounter == 0){
             life--
-            println("VIDAS: $life")
             invulnerabilityCounter = 1
         }
     }
