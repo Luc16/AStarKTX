@@ -14,15 +14,23 @@ import com.github.Luc16.AStar.components.Player
 import com.github.Luc16.AStar.utils.WallLine
 import ktx.graphics.use
 import kotlin.concurrent.thread
+import kotlin.math.roundToInt
 
 const val MAX_NUM_WALLS = 100
 const val NUM_LIVES = 3
+const val NUM_ENEMIES = 6
+const val SPEED_INCREASE = 0.3f
 
 class GameScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
     private var prevDraw: Position? = null
     private val wallLine: WallLine = WallLine(MAX_NUM_WALLS)
-    private val enemies = listOf(Enemy(4f, 10f, 10f), Enemy(4f, 1000f, 600f))
-    private val player = Player(NUM_LIVES, 4f, 200f, 200f)
+    private val enemies = List(NUM_ENEMIES) { i ->
+        val y = if (i % 2 == 0) HEIGHT - 50f else 50f
+        Enemy(3f, (i % NUM_ENEMIES/2) * (WIDTH - 100f) / (NUM_ENEMIES / 2) + 50f, y, grid)
+    }
+    private val player = Player(NUM_LIVES, 3f, WIDTH/2f, HEIGHT/2f)
+    private var score = 0
+    private val file = Gdx.files.local("assets/score.txt")
 
     override fun render(delta: Float) {
         if (player.life <= 0) endGame()
@@ -33,32 +41,43 @@ class GameScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
 
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_2)) game.setScreen<AlgorithmScreen>()
 
-        draw { renderer ->
-            player.draw(renderer)
-            enemies.forEach { enemy -> enemy.draw(renderer) }
+        draw { batch ->
+            player.draw(batch)
+            enemies.forEach { enemy -> enemy.draw(batch) }
+            font.draw(batch, "Lives: ${player.life}", WIDTH - 200f, HEIGHT - 30f)
+            font.draw(batch, "Score: ${(1000*score/120f).toInt()}", WIDTH/2f - 100f, HEIGHT - 30f)
         }
-        batch.use {
-            font.draw(batch, "Vidas: ${player.life}", WIDTH - 200f, HEIGHT - 30f)
-        }
+        score++
     }
 
     private fun endGame(){
         player.reset()
-        enemies.forEach { enemy -> enemy.reset() }
-        game.setScreen<MenuScreen>()
         resetGrid()
+        enemies.forEach { enemy ->
+            enemy.reset()
+            enemy.grid = grid
+        }
         prevDraw = null
         wallLine.removeAll()
+        val scores = file.readString().split(" ")
+        file.writeString(
+            (if ((1000*score/120f).toInt() > scores[0].toInt()) "${(1000*score/120f).toInt()}" else scores[0]) +
+                    " ${(1000*score/120f).toInt()}",
+            false
+        )
+        score = 0
+        game.setScreen<MenuScreen>()
     }
 
     private fun updateEnemies(){
-        var allStuck = true
+        var numStuck = 0
         enemies.forEach { enemy ->
-            enemy.move(grid, player.worldToGrid(grid).pos, enemies)
-            if (!enemy.noMovementAvailable()) allStuck = false
+            if (score % 1200 == 0) enemy.speed += SPEED_INCREASE
+            if (player.invulnerabilityCounter == 0)  enemy.move(player.worldToGrid(grid).pos, enemies)
+            if (enemy.noMovementAvailable()) numStuck++
             if (enemy.rect.overlaps(player.rect)) player.getHit()
         }
-        if (allStuck) wallLine.removeAll()
+        if (numStuck >= 4) wallLine.removeAll()
     }
 
     private fun updatePlayer(){
@@ -67,6 +86,7 @@ class GameScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
         if(Gdx.input.isKeyPressed(Input.Keys.A)) direction.x = -1f
         if(Gdx.input.isKeyPressed(Input.Keys.S)) direction.y = -1f
         if(Gdx.input.isKeyPressed(Input.Keys.D)) direction.x = 1f
+        player.updateSpriteDirection(direction)
         player.move(wallLine, direction)
     }
 

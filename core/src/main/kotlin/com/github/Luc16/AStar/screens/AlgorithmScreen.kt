@@ -22,6 +22,7 @@ class AlgorithmScreen(game: AStar, bcColor: Color): AstarScreen(game, bcColor) {
 
     override fun render(delta: Float) {
         if (Gdx.input.isKeyPressed(Input.Keys.NUM_1)) game.setScreen<GameScreen>()
+        else if (Gdx.input.isKeyPressed(Input.Keys.ESCAPE)) game.setScreen<MenuScreen>()
         if (!startAnimation) runAlgo()
         else runAnimation()
         draw {}

@@ -1,6 +1,7 @@
 package com.github.Luc16.AStar.components
 
-import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.math.Vector2
 import com.github.Luc16.AStar.*
 import com.github.Luc16.AStar.screens.NUM_LIVES
@@ -13,15 +14,30 @@ class Player(var life: Int,
             private val speed: Float,
             x: Float,
             y: Float):
-    Entity(x, y, Color.BLACK) {
+    Entity(x, y) {
     var invulnerabilityCounter = 0
+    private val textures = mapOf(
+        "up" to Texture(Gdx.files.internal("assets/up.jpeg")),
+        "down" to Texture(Gdx.files.internal("assets/down.jpeg")),
+        "ur" to Texture(Gdx.files.internal("assets/ur.jpeg")),
+        "dl" to Texture(Gdx.files.internal("assets/dl.jpeg")),
+        "right" to Texture(Gdx.files.internal("assets/right.jpeg")),
+        "idle" to Texture(Gdx.files.internal("assets/idle.jpeg"))
+    )
+
+    init {
+        textures["idle"]?.let { setSpriteRegion(it) }
+    }
 
     fun move(walls: WallLine, direction: Vector2): Vector2 {
         if (life <= 0) return Vector2(0f, 0f)
         val moveAmount = Vector2(rect.x, rect.y)
 
         if (invulnerabilityCounter > 0) invulnerabilityCounter++
-        if (invulnerabilityCounter > INVULNERABILITY_TIME) invulnerabilityCounter = 0
+        if (invulnerabilityCounter > INVULNERABILITY_TIME) {
+            sprite.setAlpha(1f)
+            invulnerabilityCounter = 0
+        }
 
         var increment = speed
         if (direction.x != 0f && direction.y != 0f){
@@ -75,15 +91,30 @@ class Player(var life: Int,
 
     fun getHit(){
         if (invulnerabilityCounter == 0){
+            sprite.setAlpha(0.5f)
             life--
             invulnerabilityCounter = 1
         }
     }
 
-    override fun reset() {
-        life = NUM_LIVES
-        super.reset()
+    fun updateSpriteDirection(direction: Vector2) {
+        when {
+            direction.epsilonEquals(Vector2(0f, 1f)) -> textures["up"]?.let { setSpriteRegion(it) }
+            direction.epsilonEquals(Vector2(0f, -1f)) -> textures["down"]?.let { setSpriteRegion(it) }
+            direction.epsilonEquals(Vector2(1f, 1f)) -> textures["ur"]?.let { setSpriteRegion(it) }
+            direction.epsilonEquals(Vector2(-1f, 1f)) -> textures["ur"]?.let { setSpriteRegion(it, true) }
+            direction.epsilonEquals(Vector2(-1f, -1f)) -> textures["dl"]?.let { setSpriteRegion(it) }
+            direction.epsilonEquals(Vector2(1f, -1f)) -> textures["dl"]?.let { setSpriteRegion(it, true) }
+            direction.epsilonEquals(Vector2(1f, 0f)) -> textures["right"]?.let { setSpriteRegion(it) }
+            direction.epsilonEquals(Vector2(-1f, 0f)) -> textures["right"]?.let { setSpriteRegion(it, true) }
+            else -> textures["idle"]?.let { setSpriteRegion(it) }
+        }
     }
 
-
+    override fun reset() {
+        life = NUM_LIVES
+        invulnerabilityCounter = 0
+        sprite.setAlpha(1f)
+        super.reset()
+    }
 }

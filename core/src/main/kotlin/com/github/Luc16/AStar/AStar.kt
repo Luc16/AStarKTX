@@ -16,11 +16,11 @@ import ktx.app.KtxGame
 import ktx.log.Logger
 import ktx.log.logger
 
-const val WIDTH = 1280*5/4
-const val HEIGHT = 720*5/4
+const val WIDTH = 1850
+const val HEIGHT = 1020
 
-const val SIZE_X = WIDTH/12
-const val SIZE_Y = HEIGHT/12
+const val SIZE_X = WIDTH/20
+const val SIZE_Y = HEIGHT/20
 
 const val SQ_SIZE_X = WIDTH/SIZE_X.toFloat()
 const val SQ_SIZE_Y = HEIGHT/SIZE_Y.toFloat()
@@ -38,9 +38,9 @@ class AStar: KtxGame<CustomScreen>() {
         LOG.debug { "Create game instance" }
         addScreen(Screen1(this))
         addScreen(AlgorithmScreen(this, Color.LIGHT_GRAY))
-        addScreen(GameScreen(this, Color.NAVY))
+        addScreen(GameScreen(this, Color.TEAL))
         addScreen(MenuScreen(this))
-        setScreen<GameScreen>()
+        setScreen<MenuScreen>()
     }
 
     override fun dispose() {

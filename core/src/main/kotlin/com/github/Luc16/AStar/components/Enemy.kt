@@ -1,10 +1,15 @@
 package com.github.Luc16.AStar.components
 
 import algorithm.Position
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.math.Vector2
+import com.github.Luc16.AStar.HEIGHT
 import com.github.Luc16.AStar.SQ_SIZE_X
 import com.github.Luc16.AStar.SQ_SIZE_Y
+import com.github.Luc16.AStar.WIDTH
 import kotlin.math.sqrt
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -15,37 +20,43 @@ import java.util.concurrent.Executors
 const val MIN_MOVES = 30
 
 class Enemy(
-    private val speed: Float,
+    private val initialSpeed: Float,
     x: Float,
-    y: Float
+    y: Float,
+    var grid: GameGrid
 ) :
-    Entity(x, y, Color.GOLD) {
+    Entity(x, y) {
 
     private var counter = 0
     private var directions = listOf<Vector2>()
     private val startPos = Vector2()
     private var moveCounter = 0
+    var speed = initialSpeed
+    private val enemyNode get() = worldToGrid(grid)
 
-    private fun calculatePath(grid: GameGrid, target: Position) {
-        val node = worldToGrid(grid)
-        rect.x = node.rect.x
-        rect.y = node.rect.y
+    init {
+        setSpriteRegion(Texture(Gdx.files.internal("assets/enemy.jpeg")))
+    }
+
+    private fun calculatePath(target: Position) {
+        rect.x = enemyNode.rect.x
+        rect.y = enemyNode.rect.y
         startPos.set(rect.x, rect.y)
-        directions = grid.shortestPath(node.pos, target, false)
+        directions = grid.shortestPath(enemyNode.pos, target, false)
         counter = 0
         grid.resetPath()
     }
 
-    private fun generateNewPath(grid: GameGrid, target: Position) {
+    private fun generateNewPath(target: Position) {
         moveCounter = 0
-        calculatePath(grid, target)
+        calculatePath(target)
     }
 
     fun noMovementAvailable(): Boolean = directions.isNotEmpty() && (directions[0].x == 0f && directions[0].y == 0f)
 
-    fun move(grid: GameGrid, target: Position, enemies: List<Enemy>) {
+    fun move(target: Position, enemies: List<Enemy>) {
         if (counter >= directions.size || noMovementAvailable() || directions.isEmpty()) {
-            generateNewPath(grid, target)
+            generateNewPath(target)
             return
         }
         rect.run {
@@ -56,10 +67,20 @@ class Enemy(
             x += directions[counter].x * increment
             y += directions[counter].y * increment
 
-            if (!worldToGrid(grid).isTraversable || collidingWithOther(enemies)) {
+            if (y > HEIGHT - SQ_SIZE_Y) y = HEIGHT - SQ_SIZE_Y - 0.01f
+            else if (y < 0) y = 0.01f
+            if (x > WIDTH - SQ_SIZE_X) {
+                x = WIDTH - SQ_SIZE_X - 0.01f
+                if (collidingWithOther(enemies)){
+                    y -= SQ_SIZE_Y
+                }
+            }
+            else if (x < 0) x = 0.01f
+
+            if (!enemyNode.isTraversable || collidingWithOther(enemies)) {
                 x -= 2 * directions[counter].x * increment
                 y -= 2 * directions[counter].y * increment
-                worldToGrid(grid).run {
+                enemyNode.run {
                     if (!isTraversable) {
                         becomeTraversable()
                     }
@@ -78,7 +99,7 @@ class Enemy(
                 y = startPos.y + SQ_SIZE_Y * directions[counter].y
                 startPos.set(rect.x, rect.y)
                 counter++
-                if (moveCounter > MIN_MOVES) generateNewPath(grid, target)
+                if (moveCounter > MIN_MOVES) generateNewPath(target)
             }
         }
         moveCounter++
@@ -99,6 +120,7 @@ class Enemy(
         directions = listOf()
         startPos.set(0f, 0f)
         moveCounter = 0
+        speed = initialSpeed
         super.reset()
     }
 
