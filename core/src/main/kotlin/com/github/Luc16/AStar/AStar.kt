@@ -36,7 +36,6 @@ class AStar: KtxGame<CustomScreen>() {
         font.data.scale(2f)
         Gdx.app.logLevel = LOG_DEBUG
         LOG.debug { "Create game instance" }
-        addScreen(Screen1(this))
         addScreen(AlgorithmScreen(this, Color.LIGHT_GRAY))
         addScreen(GameScreen(this, Color.TEAL))
         addScreen(MenuScreen(this))
